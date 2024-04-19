@@ -7,12 +7,14 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.company.inventory.dao.ICategoryDao;
 import com.company.inventory.dao.IProductDao;
 import com.company.inventory.model.Category;
 import com.company.inventory.model.Product;
 import com.company.inventory.response.ProductResponseRest;
+import com.company.inventory.util.Util;
 
 @Service
 public class ProductServiceImpl implements IProductService {
@@ -33,8 +35,11 @@ public class ProductServiceImpl implements IProductService {
 		this.productDao = productDao;
 	}
 		
-	
+	/**
+	 * Implementation of the Save Product method
+	 */
 	@Override
+	@Transactional
 	public ResponseEntity<ProductResponseRest> save(Product product, Long categoryId) {
 	
 		ProductResponseRest response = new ProductResponseRest();
@@ -72,6 +77,46 @@ public class ProductServiceImpl implements IProductService {
 		
 		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 
+	}
+
+
+	/**
+	 * Implementation of the Search Product by ID method
+	 */
+	@Override
+	@Transactional(readOnly=true)
+	public ResponseEntity<ProductResponseRest> searchById(Long id) {
+	
+		ProductResponseRest response = new ProductResponseRest();
+		List<Product> list = new ArrayList<>();
+		
+		try {
+			//Search product by id
+			Optional<Product> product = productDao.findById(id);
+			
+			if(product.isPresent()) {
+				//Descomprimimos la imagen y la seteamos a product.get()
+				byte[] imageDescompressed = Util.decompressZLib(product.get().getPicture());
+				product.get().setPicture(imageDescompressed);
+				
+				list.add(product.get());
+				
+				response.getProductResponse().setProducts(list);
+				response.setMetadata("Respuesta Ok", "00", "Producto encontrado");
+				
+			}else {
+				response.setMetadata("Error", "-1", "Producto No encontrado");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+					
+		} 
+		catch(Exception e){
+			e.getStackTrace(); //más info del error
+			response.setMetadata("Error", "-1", "Error al consultar por Producto");
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
 	};
 
 	

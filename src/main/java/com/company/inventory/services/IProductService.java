@@ -8,5 +8,9 @@ import com.company.inventory.response.ProductResponseRest;
 public interface IProductService {
 	
 	public ResponseEntity<ProductResponseRest> save(Product product, Long categoryId);
-
+	
+	public ResponseEntity<ProductResponseRest> searchById(Long id);
+	
+	
+ 
 }
