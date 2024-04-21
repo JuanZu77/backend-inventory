@@ -89,6 +89,19 @@ public class ProductRestController {
     	
     	ResponseEntity<ProductResponseRest> response = productService.searchByName(name);
     	return response;
+    };
+    
+    
+    /**
+     * Delete Product
+     * @param id
+     * @return
+     */
+    @PostMapping("/products/{id}")
+    public ResponseEntity<ProductResponseRest> delete(@PathVariable Long id){
+    	
+    	ResponseEntity<ProductResponseRest> response = productService.deleteById(id);
+    	return response;
     	
     };
     
