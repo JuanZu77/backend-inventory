@@ -71,7 +71,7 @@ public class ProductServiceImpl implements IProductService {
 		} 
 		catch(Exception e){
 			e.getStackTrace(); //más info del error
-			response.setMetadata("Error", "-1", "Error al consultar");
+			response.setMetadata("Error", "-1", "Internal Error: No se pudo Guardar el Producto ");
 			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
@@ -95,7 +95,7 @@ public class ProductServiceImpl implements IProductService {
 			Optional<Product> product = productDao.findById(id);
 			
 			if(product.isPresent()) {
-				//Descomprimimos la imagen y la seteamos a product.get()
+				//Descomprimimos la foto, la seteamos a "picture" y la agregamos a la lista
 				byte[] imageDescompressed = Util.decompressZLib(product.get().getPicture());
 				product.get().setPicture(imageDescompressed);
 				
@@ -105,14 +105,14 @@ public class ProductServiceImpl implements IProductService {
 				response.setMetadata("Respuesta Ok", "00", "Producto encontrado");
 				
 			}else {
-				response.setMetadata("Error", "-1", "Producto No encontrado");
+				response.setMetadata("Error", "-1", "No existen Productos con el ID indicado");
 				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
 			}
 					
 		} 
 		catch(Exception e){
 			e.getStackTrace(); //más info del error
-			response.setMetadata("Error", "-1", "Error al consultar por Producto");
+			response.setMetadata("Error", "-1", "Error al consultar Producto por Id");
 			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
@@ -141,20 +141,18 @@ public class ProductServiceImpl implements IProductService {
 			
 				listAux.stream().forEach((p)->{
 					
-					//Descomprimimos la imagen y la seteamos a product.get()
+					//Descomprimimos la foto, la seteamos a "picture" y la agregamos a la lista
 					byte[] imageDescompressed = Util.decompressZLib(p.getPicture());
 					p.setPicture(imageDescompressed);
 					list.add(p);
-					
-					
-				});
-				
+								
+				});		
 				
 				response.getProductResponse().setProducts(list);
 				response.setMetadata("Respuesta Ok", "00", "Productos encontrados");
 				
 			}else {
-				response.setMetadata("Error", "-1", "Producto No encontrado");
+				response.setMetadata("Error", "-1", "No existen Productos con el nombre indicado");
 				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
 			}
 					
@@ -195,6 +193,113 @@ public class ProductServiceImpl implements IProductService {
 		}
 		
 		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+	}
+
+	
+	
+	/**
+	 * Search all products
+	 */
+	@Override
+	@Transactional(readOnly=true)
+	public ResponseEntity<ProductResponseRest> search() {
+
+		ProductResponseRest response = new ProductResponseRest();
+		List<Product> list = new ArrayList<>();
+		List<Product> listAux = new ArrayList<>();
+		
+		try {
+			//Search all products
+			listAux = (List<Product>)productDao.findAll();
+			
+			if(listAux.size() > 0) {
+			
+				listAux.stream().forEach((p)->{
+					
+					//Descomprimimos la foto, la seteamos a "picture" y la agregamos a la lista
+					byte[] imageDescompressed = Util.decompressZLib(p.getPicture());
+					p.setPicture(imageDescompressed);
+					list.add(p);								
+				});
+							
+				response.getProductResponse().setProducts(list);
+				response.setMetadata("Respuesta Ok", "00", "Productos Encontrados");
+				
+			}else {
+				response.setMetadata("Error", "-1", "No exiten productos para mostrar");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+					
+		} 
+		catch(Exception e){
+			e.getStackTrace(); //más info del error
+			response.setMetadata("Error", "-1", "Error al buscar Productos");
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+	}
+
+	
+	
+	/**
+	 * update product
+	 */
+	@Override
+	@Transactional
+	public ResponseEntity<ProductResponseRest> update(Product product, Long categoryId, Long id) {
+		ProductResponseRest response = new ProductResponseRest();
+		List<Product> list = new ArrayList<>();
+		
+		try {
+			//Search Category to set in the product
+			Optional<Category> category = categoryDao.findById(categoryId);
+			
+			if(category.isPresent()) {
+				product.setCategory(category.get());
+			}else {
+				response.setMetadata("Error", "-1", "Categoria No encontrada");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+			
+			//Search Product to update
+			Optional<Product> productSearch =  productDao.findById(id);
+			
+			if(productSearch != null) {
+				
+				//UPDATE product
+				productSearch.get().setAccount(product.getAccount());
+				productSearch.get().setName(product.getName());
+				productSearch.get().setPrice(product.getPrice());
+				productSearch.get().setCategory(product.getCategory());
+				productSearch.get().setPicture(product.getPicture());
+				
+				Product productToSave = productDao.save(productSearch.get());
+				
+				if(productToSave != null) {
+					list.add(productToSave);
+					response.getProductResponse().setProducts(list);
+					response.setMetadata("Respuesta OK", "00", "Producto Actualizado");
+				}else {
+					response.setMetadata("Respuesta OK", "00", "Producto NO Actualizado");
+					return new ResponseEntity<ProductResponseRest>(response, HttpStatus.BAD_REQUEST);
+				}
+				
+				
+			}else {
+				response.setMetadata("Error", "-1", "Error al Actualizar al Producto");
+				return new ResponseEntity<ProductResponseRest>(response, HttpStatus.BAD_REQUEST);
+			}
+			
+		} 
+		catch(Exception e){
+			e.getStackTrace(); //más info del error
+			response.setMetadata("Error", "-1", "Internal Error: Producto NO Actualizado");
+			return new ResponseEntity<ProductResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		
+		return new ResponseEntity<ProductResponseRest>(response, HttpStatus.OK);
+
 	};
 
 	
