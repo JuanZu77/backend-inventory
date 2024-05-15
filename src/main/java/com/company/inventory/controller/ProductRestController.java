@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,7 @@ import com.company.inventory.response.ProductResponseRest;
 import com.company.inventory.services.IProductService;
 import com.company.inventory.util.Util;
 
-@CrossOrigin(origins= {"http://localhost:4200"})
+@CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
 @RequestMapping("api/v1")
 public class ProductRestController {
@@ -98,7 +99,7 @@ public class ProductRestController {
      * @param id
      * @return
      */
-    @PostMapping("/products/{id}")
+    @DeleteMapping("/products/{id}")
     public ResponseEntity<ProductResponseRest> delete(@PathVariable Long id){
     	
     	ResponseEntity<ProductResponseRest> response = productService.deleteById(id);
