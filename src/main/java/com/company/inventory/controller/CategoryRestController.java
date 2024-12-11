@@ -106,7 +106,7 @@ public class CategoryRestController {
 		
 		response.setContentType("application/octet-stream"); //tipo a exportar
 		String headerKey = "Content-Disposition";
-		String HeaderValue = "attachment; filename=result_category";
+		String HeaderValue = "attachment; filename=result_category.xlsx";
 		response.setHeader(headerKey, HeaderValue);
 		
 		//llamar a todas las categorias existentes en la BD

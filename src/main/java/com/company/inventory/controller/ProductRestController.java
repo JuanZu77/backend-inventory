@@ -17,7 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.company.inventory.model.Product;
 import com.company.inventory.response.ProductResponseRest;
 import com.company.inventory.services.IProductService;
+import com.company.inventory.util.ProductExcelExporter;
 import com.company.inventory.util.Util;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
@@ -157,5 +160,27 @@ public class ProductRestController {
    		
    	};
     
+   	/**
+   	 * export product in excel file 
+   	 * @param response
+   	 * @throws IOException
+   	 */
+   	@GetMapping("/products/export/excel")
+	public void exportToExcel(HttpServletResponse response) throws IOException {
+		
+		response.setContentType("application/octet-stream"); //tipo a exportar
+		String headerKey = "Content-Disposition";
+		String HeaderValue = "attachment; filename=result_products.xlsx";
+		response.setHeader(headerKey, HeaderValue);
+		
+		//llamar a todos los productos existentes en la BD
+		ResponseEntity<ProductResponseRest> products = productService.search();
+		
+		//add data excel
+		ProductExcelExporter excelExporter = new ProductExcelExporter(products.getBody().getProductResponse().getProducts());
+		
+		//llamo al metodo export de ProductExcelExporter y le pasamos la data
+		excelExporter.export(response);
+	}
 	
 }; //Product controller
